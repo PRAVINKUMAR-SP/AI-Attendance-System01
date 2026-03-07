@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Custom utility classes, overrides, etc. */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f3f4f6; /* Tailwind gray-100 */
+}

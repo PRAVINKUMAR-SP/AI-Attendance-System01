@@ -1,0 +1,10 @@
+[2026-03-05T19:51:12.027Z] [SMS Error] To: 8072628827, Error: Permission to send an SMS has not been enabled for the region indicated by the 'To' number: 807262XXXX
+[2026-03-05T19:51:16.001Z] [Email Success] To: pravin007ptk@gmail.com, Response: 250 2.0.0 OK  1772740274 98e67ed59e1d1-359bbd2c898sm68430a91.6 - gsmtp
+[2026-03-05T19:52:02.832Z] [Email Attempt] To: pravin007ptk@gmail.com, User: Present, Pass: Present
+[2026-03-05T19:52:02.844Z] [SMS Attempt] To: 8072628827
+[2026-03-05T19:52:04.184Z] [SMS Error] To: 8072628827, Error: Permission to send an SMS has not been enabled for the region indicated by the 'To' number: 807262XXXX
+[2026-03-05T19:52:08.466Z] [Email Success] To: pravin007ptk@gmail.com, Response: 250 2.0.0 OK  1772740325 d9443c01a7336-2ae51bb9da6sm121406245ad.36 - gsmtp
+[2026-03-05T19:56:16.602Z] [Email Attempt] To: pravin007ptk@gmail.com, User: Present, Pass: Present
+[2026-03-05T19:56:16.620Z] [SMS Attempt] To: +918072628827 (Original: 8072628827)
+[2026-03-05T19:56:18.073Z] [SMS Error] To: 8072628827, Error: Permission to send an SMS has not been enabled for the region indicated by the 'To' number: 807262XXXX
+[2026-03-05T19:56:21.940Z] [Email Success] To: pravin007ptk@gmail.com, Response: 250 2.0.0 OK  1772740580 d9443c01a7336-2adfb69fa5asm237585865ad.60 - gsmtp
