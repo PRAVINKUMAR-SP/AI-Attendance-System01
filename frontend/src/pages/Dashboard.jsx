@@ -196,23 +196,23 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{stats.totalUsers}</dd>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <div className="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-5 md:p-6">
+                    <dt className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-1">Total Users</dt>
+                    <dd className="text-3xl font-black text-gray-900">{stats.totalUsers}</dd>
                 </div>
-                <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
-                    <dt className="text-sm font-medium text-gray-500 truncate">Absent Today</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-rose-600">{stats.absentToday}</dd>
+                <div className="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-5 md:p-6">
+                    <dt className="text-[10px] uppercase font-bold text-rose-400 tracking-widest mb-1">Absent Today</dt>
+                    <dd className="text-3xl font-black text-rose-600">{stats.absentToday}</dd>
                 </div>
-                <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 p-6">
-                    <dt className="text-sm font-medium text-gray-500 truncate">Present Today</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-emerald-600">{stats.presentToday}</dd>
+                <div className="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 p-5 md:p-6">
+                    <dt className="text-[10px] uppercase font-bold text-emerald-400 tracking-widest mb-1">Present Today</dt>
+                    <dd className="text-3xl font-black text-emerald-600">{stats.presentToday}</dd>
                 </div>
-                <div className="bg-gradient-to-br from-indigo-600 to-purple-700 overflow-hidden shadow-sm rounded-xl p-6 text-white col-span-1 sm:col-span-2 lg:col-span-1">
+                <div className="bg-gradient-to-br from-indigo-600 to-purple-700 overflow-hidden shadow-xl rounded-2xl p-5 md:p-6 text-white sm:col-span-2 lg:col-span-1">
                     <div className="flex justify-between items-start mb-2">
-                        <div className="text-lg font-bold opacity-90">Attendance Window</div>
-                        {isSessionActive && <span className="flex items-center gap-1.5 bg-red-500 rounded-full px-2 py-0.5 text-[10px] uppercase font-black tracking-tighter animate-pulse shadow-lg ring-4 ring-red-500/20">Live Session</span>}
+                        <div className="text-sm font-black uppercase tracking-wider opacity-90">Live Scanner</div>
+                        {isSessionActive && <span className="flex items-center gap-1.5 bg-red-500 rounded-full px-2 py-0.5 text-[8px] uppercase font-black tracking-tighter animate-pulse shadow-lg ring-4 ring-red-500/20">Active</span>}
                     </div>
 
                     {!isSessionActive && sessionStatus === 'Idle' ? (

@@ -208,7 +208,7 @@ const LiveCamera = () => {
             const data = await response.json();
 
             setSessionResults({
-                present: markedToday.size,
+                present: data.presentCount || 0,
                 absent: data.absentCount || 0,
                 absentStudents: data.absentStudents || []
             });
@@ -366,8 +366,8 @@ const LiveCamera = () => {
                 {cameraError && <span className="text-red-500 text-xs font-bold">{cameraError}</span>}
             </div>
 
-            <div className="relative bg-black rounded-3xl overflow-hidden shadow-2xl border-8 border-gray-900 mx-auto" style={{ width: 720, height: 560 }}>
-                <video ref={videoRef} autoPlay muted onPlay={handleVideoPlay} width={720} height={560} className="w-full h-full object-cover" />
+            <div className="relative bg-black rounded-3xl overflow-hidden shadow-2xl border-4 md:border-8 border-gray-900 mx-auto w-full max-w-[720px] aspect-[4/3]">
+                <video ref={videoRef} autoPlay muted onPlay={handleVideoPlay} className="w-full h-full object-cover" />
                 <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
                 {/* Live Indicator / Timer */}
