@@ -1,44 +1,36 @@
-import nodemailer from 'nodemailer';
 import NotificationLog from '../models/NotificationLog.js';
-import dns from 'dns';
 
 export const sendEmail = async (to, messageContent, userId = 'Unknown', name = 'Unknown') => {
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        const apiKey = process.env.RESEND_API_KEY;
+        const fromEmail = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev'; // Resend's default testing domain
+
+        if (!apiKey) {
             console.log(`[Mock Email] To ${to}: ${messageContent}`);
             return;
         }
 
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false, // STARTTLS
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
             },
-            tls: {
-                rejectUnauthorized: false
-            },
-            // FORCE IPv4
-            family: 4, 
-            connectionTimeout: 20000,
-            greetingTimeout: 20000,
-            socketTimeout: 20000,
-            dnsLookup: (hostname, options, callback) => {
-                dns.lookup(hostname, { family: 4 }, callback);
-            }
+            body: JSON.stringify({
+                from: `AI Attendance System <${fromEmail}>`,
+                to: [to],
+                subject: 'AI Attendance System Notification',
+                text: `${messageContent}\n\nThank you.\nAI Attendance System`
+            })
         });
 
-        const mailOptions = {
-            from: `"AI Attendance System" <${process.env.EMAIL_USER}>`,
-            to: to,
-            subject: 'AI Attendance System Notification',
-            text: `${messageContent}\n\nThank you.\nAI Attendance System`,
-        };
+        const data = await response.json();
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL SUCCESS] Message sent: ${info.messageId}`);
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to send email via Resend API');
+        }
+
+        console.log(`[EMAIL SUCCESS] Message sent via Resend API: ${data.id}`);
         
         // Log Success to DB
         await NotificationLog.create({
