@@ -1,36 +1,30 @@
+import { Resend } from 'resend';
 import NotificationLog from '../models/NotificationLog.js';
 
 export const sendEmail = async (to, messageContent, userId = 'Unknown', name = 'Unknown') => {
     try {
         const apiKey = process.env.RESEND_API_KEY;
-        const fromEmail = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev'; // Resend's default testing domain
+        const fromEmail = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev'; 
 
         if (!apiKey) {
             console.log(`[Mock Email] To ${to}: ${messageContent}`);
             return;
         }
 
-        const response = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                from: `AI Attendance System <${fromEmail}>`,
-                to: [to],
-                subject: 'AI Attendance System Notification',
-                text: `${messageContent}\n\nThank you.\nAI Attendance System`
-            })
+        const resend = new Resend(apiKey);
+
+        const { data, error } = await resend.emails.send({
+            from: `AI Attendance System <${fromEmail}>`,
+            to: to, // Note: For Resend free tier, this MUST match the verified email
+            subject: 'AI Attendance System Notification',
+            text: `${messageContent}\n\nThank you.\nAI Attendance System`,
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to send email via Resend API');
+        if (error) {
+            throw new Error(error.message || 'Failed to send email via Resend SDK');
         }
 
-        console.log(`[EMAIL SUCCESS] Message sent via Resend API: ${data.id}`);
+        console.log(`[EMAIL SUCCESS] Message sent via Resend SDK: ${data.id}`);
         
         // Log Success to DB
         await NotificationLog.create({
