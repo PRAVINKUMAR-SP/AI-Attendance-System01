@@ -1,39 +1,42 @@
-import nodemailer from 'nodemailer';
 import NotificationLog from '../models/NotificationLog.js';
 
 export const sendEmail = async (to, messageContent, userId = 'Unknown', name = 'Unknown') => {
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        const serviceId = process.env.EMAILJS_SERVICE_ID;
+        const templateId = process.env.EMAILJS_TEMPLATE_ID;
+        const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+        const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+
+        if (!serviceId || !templateId || !publicKey) {
             console.log(`[Mock Email] To ${to}: ${messageContent}`);
             return;
         }
 
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            family: 4, // FORCE IPv4
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
+        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
             },
-            tls: {
-                rejectUnauthorized: false
-            },
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 10000
+            body: JSON.stringify({
+                service_id: serviceId,
+                template_id: templateId,
+                user_id: publicKey,
+                accessToken: privateKey,
+                template_params: {
+                    to_email: to,
+                    to_name: name,
+                    message: messageContent,
+                    from_name: 'AI Attendance System',
+                }
+            })
         });
 
-        const mailOptions = {
-            from: `"AI Attendance System" <${process.env.EMAIL_USER}>`,
-            to: to,
-            subject: 'AI Attendance System Notification',
-            text: `${messageContent}\n\nThank you.\nAI Attendance System`,
-        };
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to send email via EmailJS');
+        }
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[EMAIL SUCCESS] Message sent: ${info.messageId}`);
+        console.log(`[EMAIL SUCCESS] Message sent via EmailJS to ${to}`);
 
         // Log Success to DB
         await NotificationLog.create({
