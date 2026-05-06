@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import NotificationLog from '../models/NotificationLog.js';
+import dns from 'dns';
 
 export const sendEmail = async (to, messageContent, userId = 'Unknown', name = 'Unknown') => {
     try {
@@ -9,13 +10,22 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
         }
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, 
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
             },
             tls: {
                 rejectUnauthorized: false
+            },
+            // FORCE IPv4 to avoid ENETUNREACH on IPv6 networks like Render
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000,
+            dnsLookup: (hostname, options, callback) => {
+                dns.lookup(hostname, { family: 4 }, callback);
             }
         });
 
