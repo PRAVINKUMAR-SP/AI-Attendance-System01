@@ -11,8 +11,8 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
 
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, 
+            port: 587,
+            secure: false, // STARTTLS
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
@@ -20,7 +20,7 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
             tls: {
                 rejectUnauthorized: false
             },
-            // THE ABSOLUTE FIX: Hard-lock to IPv4
+            // FORCE IPv4
             family: 4, 
             connectionTimeout: 20000,
             greetingTimeout: 20000,
