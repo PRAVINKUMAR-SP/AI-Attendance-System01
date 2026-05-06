@@ -16,8 +16,11 @@ export const markAttendance = async (req, res) => {
             return res.status(404).json({ message: 'User not found in database' });
         }
 
+        // Normalize date to YYYY-MM-DD
+        const normalizedDate = new Date(date).toISOString().split('T')[0];
+
         // Check if attendance already marked for today
-        const existingAttendance = await Attendance.findOne({ userId, date });
+        const existingAttendance = await Attendance.findOne({ userId, date: normalizedDate });
         if (existingAttendance) {
             return res.status(400).json({ message: 'Attendance already marked for today' });
         }
@@ -141,17 +144,19 @@ export const addManualAttendance = async (req, res) => {
 // @access  Public
 export const processDailyAbsences = async (req, res) => {
     try {
-        const { date } = req.body; // e.g., '2026-03-06'
+        // Normalize date to YYYY-MM-DD
+        const searchDate = new Date(date).toISOString().split('T')[0];
 
         // 1. Get all registered users
         const allUsers = await User.find({});
-        console.log(`[ABSENCE CHECK] Total registered users in DB: ${allUsers.length}`);
+        console.log(`[ABSENCE CHECK] Total registered users: ${allUsers.length}`);
 
         // 2. Get ALL records for today and filter manually for 100% accuracy
         const todayRecords = await Attendance.find({});
-        const presentRecords = todayRecords.filter(rec => 
-            rec.date.includes(date) && rec.status === 'Present'
-        );
+        const presentRecords = todayRecords.filter(rec => {
+            const recDate = new Date(rec.date).toISOString().split('T')[0];
+            return recDate === searchDate && rec.status === 'Present';
+        });
         
         const presentUserIds = [...new Set(presentRecords.map(rec => rec.userId))];
         console.log(`[ABSENCE CHECK] Date Search: ${date}, Found Unique Present: ${presentUserIds.length}`);
