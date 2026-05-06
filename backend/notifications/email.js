@@ -28,8 +28,9 @@ export const sendEmail = async (to, messageContent) => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log(`[Email Sent] To: ${to} - ${info.response}`);
+        console.log(`[EMAIL SUCCESS] Message sent: ${info.messageId}`);
     } catch (error) {
-        console.error(`[Email Error] Failed to send email to ${to}: ${error.message}`);
+        console.error(`[EMAIL ERROR] Failed to send email to ${to}:`, error.message);
+        // Don't throw - we don't want to crash the whole attendance process if one email fails
     }
 };

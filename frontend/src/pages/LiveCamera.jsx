@@ -201,6 +201,9 @@ const LiveCamera = () => {
             const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
             const date = localDate.toISOString().split('T')[0];
 
+            // Small delay to let DB settle before summary
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/process-absences`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
