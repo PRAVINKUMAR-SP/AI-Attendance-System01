@@ -19,10 +19,18 @@ export const markAttendance = async (req, res) => {
         // Use direct string comparison to avoid timezone shifts
         const normalizedDate = date; // Frontend already sends YYYY-MM-DD
 
-        // Check if attendance already marked for today
-        const existingAttendance = await Attendance.findOne({ userId, date: normalizedDate });
+        // Check if attendance already marked for today (using cleaned data)
+        const existingAttendance = await Attendance.findOne({ 
+            userId, 
+            date: normalizedDate.toString().trim() 
+        });
+
         if (existingAttendance) {
-            return res.status(400).json({ message: 'Attendance already marked for today' });
+            return res.status(200).json({ 
+                message: 'Attendance already marked for today',
+                attendance: existingAttendance,
+                alreadyMarked: true
+            });
         }
 
         const attendance = await Attendance.create({
