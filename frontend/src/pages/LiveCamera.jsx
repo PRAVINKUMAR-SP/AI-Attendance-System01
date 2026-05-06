@@ -213,7 +213,7 @@ const LiveCamera = () => {
                 absentStudents: data.absentStudents || []
             });
             setSessionComplete(true);
-            setStatusMessage(`Finalized: ${markedToday.size} Present, ${data.absentCount || 0} Absent.`);
+            setStatusMessage(`Finalized: ${data.presentCount || 0} Present, ${data.absentCount || 0} Absent.`);
         } catch (error) {
             console.error("Absence Processing Error:", error);
             setStatusMessage('Error processing absences.');
