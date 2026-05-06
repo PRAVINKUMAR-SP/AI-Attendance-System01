@@ -24,7 +24,10 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
             family: 4, 
             connectionTimeout: 20000,
             greetingTimeout: 20000,
-            socketTimeout: 20000
+            socketTimeout: 20000,
+            dnsLookup: (hostname, options, callback) => {
+                dns.lookup(hostname, { family: 4 }, callback);
+            }
         });
 
         const mailOptions = {
