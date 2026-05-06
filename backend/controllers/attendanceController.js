@@ -147,14 +147,14 @@ export const processDailyAbsences = async (req, res) => {
         const allUsers = await User.find({});
         console.log(`[ABSENCE CHECK] Total registered users in DB: ${allUsers.length}`);
 
-        // 2. Get all present students for this date (more robust search)
-        const presentRecords = await Attendance.find({ 
-            date: { $regex: new RegExp(date, 'i') }, 
-            status: 'Present' 
-        });
-        const presentUserIds = presentRecords.map(rec => rec.userId);
-        console.log(`[ABSENCE CHECK] Date: ${date}, Present count: ${presentUserIds.length}`);
-        console.log(`[ABSENCE CHECK] Present IDs: ${JSON.stringify(presentUserIds)}`);
+        // 2. Get ALL records for today and filter manually for 100% accuracy
+        const todayRecords = await Attendance.find({});
+        const presentRecords = todayRecords.filter(rec => 
+            rec.date.includes(date) && rec.status === 'Present'
+        );
+        
+        const presentUserIds = [...new Set(presentRecords.map(rec => rec.userId))];
+        console.log(`[ABSENCE CHECK] Date Search: ${date}, Found Unique Present: ${presentUserIds.length}`);
 
         // 3. Find missing students
         const absentStudents = allUsers.filter(user => !presentUserIds.includes(user.userId));
