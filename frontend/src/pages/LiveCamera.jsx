@@ -30,6 +30,8 @@ const LiveCamera = () => {
 
     // 1. Load Models & Initial Setup
     useEffect(() => {
+        const loadModels = async () => {
+            try {
                 // Wait for faceapi to be available on window (CDN load)
                 let retries = 0;
                 while ((!window.faceapi || !window.faceapi.nets) && retries < 10) {
