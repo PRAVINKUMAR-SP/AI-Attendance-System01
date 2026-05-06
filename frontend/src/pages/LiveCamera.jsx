@@ -117,6 +117,11 @@ const LiveCamera = () => {
             const users = await response.json();
             const registeredUsers = users.filter(user => user.faceDataRegistered);
 
+            // Create a lookup map for names
+            const map = new Map();
+            registeredUsers.forEach(u => map.set(u.userId, u.name));
+            usersMapRef.current = map;
+
             if (registeredUsers.length === 0) {
                 setStatusMessage('No registered users found.');
                 return;
@@ -265,8 +270,8 @@ const LiveCamera = () => {
             const activeIds = new Set();
 
             resizedDetections.forEach((detection, i) => {
-                const result = faceMatcher.findBestMatch(detection.descriptor);
-                const userId = result.label;
+                const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+                const userId = bestMatch.label;
                 const box = detection.detection.box;
                 const landmarks = detection.landmarks;
 
@@ -276,6 +281,7 @@ const LiveCamera = () => {
                 }
 
                 activeIds.add(userId);
+                const studentName = usersMapRef.current.get(userId) || userId;
 
                 // --- PASSIVE LIVENESS (Texture + Micro-Motion) ---
                 const score = getLaplacianVariance(video, box);
@@ -310,9 +316,10 @@ const LiveCamera = () => {
                 } else if (markedToday.has(userId)) {
                     drawColor = '#10b981'; // Green
                     labelText = `Verified: ${usersMapRef.current.get(userId)}`;
-                } else if (Date.now() - state.startTime >= VERIFICATION_DURATION) {
+                } else if (Date.now() - state.startTime > VERIFICATION_DURATION) {
+                    drawColor = '#10b981'; // Emerald (Verified)
+                    labelText = `Verified: ${studentName}`;
                     markAttendanceRecord(userId);
-                    drawColor = '#10b981';
                 }
 
                 livenessStateRef.current.set(userId, state);

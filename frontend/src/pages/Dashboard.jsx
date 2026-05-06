@@ -32,13 +32,24 @@ const Dashboard = () => {
             const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
             const today = localDate.toISOString().split('T')[0];
             
-            // Only count "Present" status for the presentToday stat
-            const presentToday = attendanceData.filter(record => 
-                record.date === today && record.status.includes('Present')
-            ).length;
+            // Count unique userIds for today's "Present" status
+            const uniquePresentIds = new Set(
+                attendanceData
+                    .filter(record => record.date === today && record.status === 'Present')
+                    .map(record => record.userId)
+            );
+            const presentToday = uniquePresentIds.size;
             
-            // Absent today are those who are not in the present list
-            const absentToday = usersData.length - presentToday;
+            // Absent today are those who have a literal "Absent" record OR 
+            // students who are simply missing from the present list
+            const uniqueAbsentIdsFromDB = new Set(
+                attendanceData
+                    .filter(record => record.date === today && record.status === 'Absent')
+                    .map(record => record.userId)
+            );
+            
+            // We use the larger of the two counts for a more accurate 'Absent' representation
+            const absentToday = Math.max(uniqueAbsentIdsFromDB.size, usersData.length - presentToday);
 
             setStats({
                 presentToday,
