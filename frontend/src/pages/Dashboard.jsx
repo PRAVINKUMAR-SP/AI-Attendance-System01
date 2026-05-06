@@ -32,10 +32,10 @@ const Dashboard = () => {
             const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
             const today = localDate.toISOString().split('T')[0];
             
-            // Count unique userIds for today's "Present" status
+            // Count unique userIds for today's "Present" status (Flexible Match)
             const uniquePresentIds = new Set(
                 attendanceData
-                    .filter(record => record.date === today && record.status === 'Present')
+                    .filter(record => record.date.includes(today) && record.status === 'Present')
                     .map(record => record.userId)
             );
             const presentToday = uniquePresentIds.size;
