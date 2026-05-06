@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import LiveCamera from './pages/LiveCamera';
+import AttendanceSheet from './pages/AttendanceSheet';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/register" element={<Register />} />
             <Route path="/camera" element={<LiveCamera />} />
+            <Route path="/sheet" element={<AttendanceSheet />} />
           </Routes>
         </main>
       </div>

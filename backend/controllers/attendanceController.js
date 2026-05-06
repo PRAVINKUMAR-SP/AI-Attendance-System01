@@ -122,10 +122,12 @@ export const addManualAttendance = async (req, res) => {
 
         // Trigger Email and SMS Notification for manual entry
         if (user.email) {
-            sendEmail(user.email, user.name, date, time);
+            const emailMsg = `Hello ${user.name},\n\nYour attendance for ${date} has been manually recorded.\n\nTime: ${time}`;
+            sendEmail(user.email, emailMsg);
         }
         if (user.phone) {
-            sendSMS(user.phone, user.name, time);
+            const smsMsg = `Hello ${user.name}, your attendance for ${date} was manually marked at ${time}.`;
+            sendSMS(user.phone, smsMsg);
         }
 
         res.status(201).json(attendance);
@@ -159,6 +161,18 @@ export const processDailyAbsences = async (req, res) => {
         const timeNow = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
         for (const student of absentStudents) {
+            // Check if record already exists (to avoid index errors)
+            const exists = await Attendance.findOne({ userId: student.userId, date });
+            if (!exists) {
+                await Attendance.create({
+                    userId: student.userId,
+                    name: student.name,
+                    date: date,
+                    time: timeNow,
+                    status: 'Absent'
+                });
+            }
+
             const emailMsg = `URGENT: ${student.name} is ABSENT today (${date}).\n\nPlease check with your ward.`;
             const smsMsg = `ALERT: Your ward ${student.name} is ABSENT today, ${date}. - AI System`;
 
@@ -195,6 +209,67 @@ export const processDailyAbsences = async (req, res) => {
         });
     } catch (error) {
         console.error(`[ABSENCE ERROR] ${error.message}`);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get monthly attendance sheet
+// @route   GET /api/attendance/sheet
+// @access  Public
+export const getAttendanceSheet = async (req, res) => {
+    try {
+        const { month } = req.query; // YYYY-MM
+        if (!month) {
+            return res.status(400).json({ message: 'Month is required (YYYY-MM)' });
+        }
+
+        const users = await User.find({}).sort({ name: 1 });
+        const attendanceRecords = await Attendance.find({
+            date: { $regex: `^${month}` }
+        });
+
+        // Get total days in the specified month
+        const [year, monthNum] = month.split('-').map(Number);
+        const daysInMonth = new Date(year, monthNum, 0).getDate();
+
+        const sheetData = users.map(user => {
+            const userAttendance = {};
+            let presentCount = 0;
+
+            // Initialize all days as null
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayStr = i.toString().padStart(2, '0');
+                userAttendance[dayStr] = null; 
+            }
+
+            // Fill in actual attendance
+            const userRecords = attendanceRecords.filter(rec => rec.userId === user.userId);
+            userRecords.forEach(rec => {
+                const day = rec.date.split('-')[2];
+                userAttendance[day] = rec.status;
+                if (rec.status.includes('Present')) {
+                    presentCount++;
+                }
+            });
+
+            const percentage = ((presentCount / daysInMonth) * 100).toFixed(1);
+
+            return {
+                userId: user.userId,
+                name: user.name,
+                attendance: userAttendance,
+                presentCount,
+                totalDays: daysInMonth,
+                percentage
+            };
+        });
+
+        res.json({
+            month,
+            daysInMonth,
+            data: sheetData
+        });
+    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };

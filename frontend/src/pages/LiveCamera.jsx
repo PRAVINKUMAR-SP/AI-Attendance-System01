@@ -52,7 +52,7 @@ const LiveCamera = () => {
                 const params = new URLSearchParams(window.location.search);
                 if (params.get('session') === 'true') {
                     startCamera();
-                    setTimeLeft(60); // 1 minute session
+                    setTimeLeft(20); // 20 second session
                 }
             } catch (error) {
                 console.error("Error loading models:", error);
@@ -109,7 +109,7 @@ const LiveCamera = () => {
 
     const loadRegisteredUsers = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/users');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users`);
             const users = await response.json();
             const registeredUsers = users.filter(user => user.faceDataRegistered);
 
@@ -123,7 +123,7 @@ const LiveCamera = () => {
                     const descriptions = [];
                     for (let i = 1; i <= 3; i++) {
                         try {
-                            const imgUrl = `http://localhost:5000/dataset/${user.userId}/${i}.jpg`;
+                            const imgUrl = `${import.meta.env.VITE_API_URL}/dataset/${user.userId}/${i}.jpg`;
                             const img = await faceapi.fetchImage(imgUrl);
                             const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
                             if (detection) descriptions.push(detection.descriptor);
@@ -187,7 +187,7 @@ const LiveCamera = () => {
             const now = new Date();
             const date = now.toISOString().split('T')[0];
 
-            const response = await fetch('http://localhost:5000/api/attendance/process-absences', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/process-absences`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ date })
@@ -216,7 +216,7 @@ const LiveCamera = () => {
             const date = now.toISOString().split('T')[0];
             const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
-            const response = await fetch('http://localhost:5000/api/attendance/mark', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/mark`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, date, time })

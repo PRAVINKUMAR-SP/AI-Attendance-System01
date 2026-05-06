@@ -22,8 +22,8 @@ const Navbar = () => {
                         <Link to="/register" className="text-gray-300 hover:text-white hover:bg-gray-800 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Register User
                         </Link>
-                        <Link to="/camera" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-all shadow-lg hover:shadow-blue-500/20">
-                            Live Camera
+                        <Link to="/sheet" className="text-gray-300 hover:text-white hover:bg-gray-800 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Monthly Sheet
                         </Link>
                     </div>
                 </div>

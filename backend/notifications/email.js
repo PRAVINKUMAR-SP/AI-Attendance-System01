@@ -16,14 +16,14 @@ export const sendEmail = async (to, messageContent) => {
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"AI Attendance System" <${process.env.EMAIL_USER}>`,
             to: to,
             subject: 'AI Attendance System Notification',
             text: `${messageContent}\n\nThank you.\nAI Attendance System`,
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log(`[Email Sent] ${info.response}`);
+        console.log(`[Email Sent] To: ${to} - ${info.response}`);
     } catch (error) {
         console.error(`[Email Error] Failed to send email to ${to}: ${error.message}`);
     }

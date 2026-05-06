@@ -11,14 +11,14 @@ const Dashboard = () => {
 
     // Session Timer States
     const [isSessionActive, setIsSessionActive] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(60); // 1 minute demo
+    const [timeLeft, setTimeLeft] = useState(20); // 20 seconds session
     const [sessionStatus, setSessionStatus] = useState('Idle'); // Idle, Active, Finished
 
     const fetchDashboardData = async () => {
         try {
             const [attendanceRes, usersRes] = await Promise.all([
-                fetch('http://localhost:5000/api/attendance'),
-                fetch('http://localhost:5000/api/users')
+                fetch(`${import.meta.env.VITE_API_URL}/api/attendance`),
+                fetch(`${import.meta.env.VITE_API_URL}/api/users`)
             ]);
 
             const attendanceData = await attendanceRes.json();
@@ -31,7 +31,13 @@ const Dashboard = () => {
             const now = new Date();
             const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
             const today = localDate.toISOString().split('T')[0];
-            const presentToday = attendanceData.filter(record => record.date === today).length;
+            
+            // Only count "Present" status for the presentToday stat
+            const presentToday = attendanceData.filter(record => 
+                record.date === today && record.status.includes('Present')
+            ).length;
+            
+            // Absent today are those who are not in the present list
             const absentToday = usersData.length - presentToday;
 
             setStats({
@@ -77,7 +83,7 @@ const Dashboard = () => {
             const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
             const today = localDate.toISOString().split('T')[0];
 
-            const res = await fetch('http://localhost:5000/api/attendance/process-absences', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/process-absences`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ date: today })
@@ -102,7 +108,7 @@ const Dashboard = () => {
         if (!window.confirm(`Are you sure you want to remove user ${userId}? This will also delete their face data.`)) return;
         setActionLoading(true);
         try {
-            const res = await fetch(`http://localhost:5000/api/users/${userId}`, { method: 'DELETE' });
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/${userId}`, { method: 'DELETE' });
             if (res.ok) {
                 alert('User removed successfully');
                 fetchDashboardData();
@@ -122,7 +128,7 @@ const Dashboard = () => {
         if (!window.confirm('Delete this attendance record?')) return;
         setActionLoading(true);
         try {
-            const res = await fetch(`http://localhost:5000/api/attendance/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchDashboardData();
             }
@@ -137,7 +143,7 @@ const Dashboard = () => {
         e.preventDefault();
         setActionLoading(true);
         try {
-            const res = await fetch('http://localhost:5000/api/attendance/manual', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/manual`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(manualData)
@@ -157,21 +163,6 @@ const Dashboard = () => {
         }
     };
 
-    const exportCSV = () => {
-        const headers = "ID,Name,Date,Time,Status\n";
-        const csvRows = attendance.map(record => `${record.userId},${record.name},${record.date},${record.time},${record.status}`);
-        const csvString = headers + csvRows.join('\n');
-
-        const blob = new Blob([csvString], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', `attendance_export_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
 
     return (
         <div className="animate-in fade-in duration-500 pb-12">
@@ -189,15 +180,6 @@ const Dashboard = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                         </svg>
                         Manual Entry
-                    </button>
-                    <button
-                        onClick={exportCSV}
-                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                    >
-                        <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Export CSV
                     </button>
                 </div>
             </div>
@@ -223,12 +205,14 @@ const Dashboard = () => {
                     </div>
 
                     {!isSessionActive && sessionStatus === 'Idle' ? (
-                        <button
-                            onClick={startSession}
-                            className="w-full mt-2 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-bold transition-all active:scale-95"
-                        >
-                            Start Session & Open Camera
-                        </button>
+                        <div className="space-y-3 mt-2">
+                            <button
+                                onClick={startSession}
+                                className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-bold transition-all active:scale-95"
+                            >
+                                Start Session & Open Camera
+                            </button>
+                        </div>
                     ) : (
                         <div className="mt-1 space-y-2">
                             <div className="flex items-center justify-between">
@@ -238,17 +222,23 @@ const Dashboard = () => {
                             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-white transition-all duration-1000"
-                                    style={{ width: `${(timeLeft / 60) * 100}%` }}
+                                    style={{ width: `${(timeLeft / 20) * 100}%` }}
                                 ></div>
                             </div>
-                            {timeLeft === 0 && (
+                            <div className="flex gap-2">
                                 <button
-                                    onClick={() => { setTimeLeft(60); setSessionStatus('Idle'); setIsSessionActive(false); }}
-                                    className="w-full text-[10px] font-bold uppercase opacity-60 hover:opacity-100 transition-opacity"
+                                    onClick={triggerAbsenceProcessing}
+                                    className="flex-1 py-1 bg-white text-indigo-600 rounded-lg text-[10px] font-bold uppercase"
                                 >
-                                    Reset Timer
+                                    End Session Now
                                 </button>
-                            )}
+                                <button
+                                    onClick={() => { setTimeLeft(20); setSessionStatus('Idle'); setIsSessionActive(false); }}
+                                    className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-bold uppercase"
+                                >
+                                    Reset
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -277,7 +267,14 @@ const Dashboard = () => {
                                     attendance.map((record) => (
                                         <tr key={record._id} className="hover:bg-gray-50 transition-colors group">
                                             <td className="px-6 py-4">
-                                                <div className="font-bold text-indigo-900 text-sm">{record.userId}</div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="font-bold text-indigo-900 text-sm">{record.userId}</div>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                                                        record.status.includes('Present') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                    }`}>
+                                                        {record.status}
+                                                    </span>
+                                                </div>
                                                 <div className="text-xs text-gray-500 capitalize">{record.name}</div>
                                             </td>
                                             <td className="px-6 py-4">

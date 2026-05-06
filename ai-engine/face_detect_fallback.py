@@ -70,8 +70,17 @@ def detect_and_mark_fallback():
     static_frame_count = {}    # userId -> count
     last_positions = {}        # userId -> (x, y)
     marked_today = set()
+    current_day = datetime.now().strftime("%Y-%m-%d")
 
     while True:
+        # Check if day has changed (Auto-reset for next day)
+        now_day = datetime.now().strftime("%Y-%m-%d")
+        if now_day != current_day:
+            print(f"[INFO] New day detected ({now_day}). Resetting attendance tracking.")
+            marked_today.clear()
+            verification_timer.clear()
+            current_day = now_day
+
         ret, frame = video_capture.read()
         if not ret:
             break
