@@ -108,11 +108,11 @@ const Register = () => {
     const handleUploadImages = async () => {
         setIsUploading(true);
         try {
-            await axios.post('http://localhost:5000/api/users/upload-images', {
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/users/upload-images`, {
                 userId: formData.userId,
                 images: capturedImages
             });
-            setStatus({ type: 'success', message: 'Face data registered successfully! You can now train the model.' });
+            setStatus({ type: 'success', message: 'Face data registered successfully! You can now use the scanner.' });
             stopCamera();
             setCapturedImages([]);
             setRegisterSuccess(false);
