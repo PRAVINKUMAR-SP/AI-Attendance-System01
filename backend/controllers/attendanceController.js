@@ -147,8 +147,11 @@ export const processDailyAbsences = async (req, res) => {
         const allUsers = await User.find({});
         console.log(`[ABSENCE CHECK] Total registered users in DB: ${allUsers.length}`);
 
-        // 2. Get all present students for this date
-        const presentRecords = await Attendance.find({ date });
+        // 2. Get all present students for this date (more robust search)
+        const presentRecords = await Attendance.find({ 
+            date: { $regex: new RegExp(date, 'i') }, 
+            status: 'Present' 
+        });
         const presentUserIds = presentRecords.map(rec => rec.userId);
         console.log(`[ABSENCE CHECK] Date: ${date}, Present count: ${presentUserIds.length}`);
         console.log(`[ABSENCE CHECK] Present IDs: ${JSON.stringify(presentUserIds)}`);
