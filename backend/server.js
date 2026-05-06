@@ -8,6 +8,9 @@ import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
+
 dotenv.config();
 
 connectDB();
