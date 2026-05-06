@@ -1,6 +1,6 @@
 import NotificationLog from '../models/NotificationLog.js';
 
-export const sendEmail = async (to, messageContent, userId = 'Unknown', name = 'Unknown') => {
+export const sendEmail = async (to, messageContent, userId = 'Unknown', name = 'Unknown', status = 'Present') => {
     try {
         const serviceId = process.env.EMAILJS_SERVICE_ID;
         const templateId = process.env.EMAILJS_TEMPLATE_ID;
@@ -12,6 +12,16 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
             return;
         }
 
+        const templateParams = {
+            name: name,
+            time: new Date().toLocaleString(),
+            message: messageContent,
+            status: status,
+            status_color: status === 'Present' ? 'green' : 'red',
+            emoji: status === 'Present' ? '✅' : '❌',
+            to_email: to
+        };
+
         const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
             method: 'POST',
             headers: {
@@ -22,12 +32,7 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
                 template_id: templateId,
                 user_id: publicKey,
                 accessToken: privateKey,
-                template_params: {
-                    to_email: to,
-                    to_name: name,
-                    message: messageContent,
-                    from_name: 'AI Attendance System',
-                }
+                template_params: templateParams
             })
         });
 
@@ -36,7 +41,7 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
             throw new Error(errorText || 'Failed to send email via EmailJS');
         }
 
-        console.log(`[EMAIL SUCCESS] Message sent via EmailJS to ${to}`);
+        console.log(`[EMAIL SUCCESS] ${status} notification sent to ${to}`);
 
         // Log Success to DB
         await NotificationLog.create({
