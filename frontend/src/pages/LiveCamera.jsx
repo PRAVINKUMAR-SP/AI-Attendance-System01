@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 
 // Get faceapi from the global window object
+// Relying on global window.faceapi
 const LiveCamera = () => {
-    const faceapi = window.faceapi;
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [isModelsLoaded, setIsModelsLoaded] = useState(false);
@@ -37,6 +37,7 @@ const LiveCamera = () => {
                     retries++;
                 }
 
+                // Relying on CDN-loaded faceapi from window object
                 const faceapi = window.faceapi;
 
                 if (!faceapi || !faceapi.nets) {
@@ -48,9 +49,9 @@ const LiveCamera = () => {
                 const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
                 await Promise.all([
-                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                    window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                    window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
                 ]);
 
                 setIsModelsLoaded(true);
@@ -144,14 +145,14 @@ const LiveCamera = () => {
                                 ? user.faceImages[i] 
                                 : `${import.meta.env.VITE_API_URL}/dataset/${user.userId}/${i + 1}.jpg`;
                             
-                            const img = await faceapi.fetchImage(imgUrl);
-                            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                            const img = await window.faceapi.fetchImage(imgUrl);
+                            const detection = await window.faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
                             if (detection) descriptions.push(detection.descriptor);
                         } catch (err) { }
                     }
                     if (descriptions.length > 0) {
                         usersMapRef.current.set(user.userId, user.name);
-                        return new faceapi.LabeledFaceDescriptors(user.userId, descriptions);
+                        return new window.faceapi.LabeledFaceDescriptors(user.userId, descriptions);
                     }
                     return null;
                 })
@@ -277,16 +278,16 @@ const LiveCamera = () => {
             return;
         }
 
-        faceapi.matchDimensions(canvasRef.current, displaySize);
+        window.faceapi.matchDimensions(canvasRef.current, displaySize);
 
         const loop = async () => {
             if (!isCameraActive || video.paused || video.ended) return;
 
-            const detections = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options())
+            const detections = await window.faceapi.detectAllFaces(video, new window.faceapi.SsdMobilenetv1Options())
                 .withFaceLandmarks()
                 .withFaceDescriptors();
 
-            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+            const resizedDetections = window.faceapi.resizeResults(detections, displaySize);
             const context = canvas.getContext('2d');
             context.clearRect(0, 0, canvas.width, canvas.height);
 
