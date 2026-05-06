@@ -47,10 +47,10 @@ export const markAttendance = async (req, res) => {
         const parentSmsMsg = `Notification: Your ward ${user.name} has arrived at college. Time: ${time}.`;
 
         // We don't 'await' these so the response returns to user immediately
-        if (user.email) sendEmail(user.email, emailMsg).catch(err => console.error("Email fail:", err.message));
+        if (user.email) sendEmail(user.email, emailMsg, user.userId, user.name).catch(err => console.error("Email fail:", err.message));
         if (user.parentEmail) {
             const pMsg = `Notification: Your ward ${user.name} has arrived at college.\n\nTime: ${time}`;
-            sendEmail(user.parentEmail, pMsg).catch(err => console.error("Parent Email fail:", err.message));
+            sendEmail(user.parentEmail, pMsg, user.userId, user.name).catch(err => console.error("Parent Email fail:", err.message));
         }
 
         if (user.phone) {
@@ -191,8 +191,8 @@ export const processDailyAbsences = async (req, res) => {
             const smsMsg = `ALERT: Your ward ${student.name} is ABSENT today, ${searchDate}. - AI System`;
 
             // Background Notifications
-            if (student.email) sendEmail(student.email, emailMsg).catch(err => console.error("Absence Email fail:", err.message));
-            if (student.parentEmail) sendEmail(student.parentEmail, emailMsg).catch(err => console.error("Absence Parent Email fail:", err.message));
+            if (student.email) sendEmail(student.email, emailMsg, student.userId, student.name).catch(err => console.error("Absence Email fail:", err.message));
+            if (student.parentEmail) sendEmail(student.parentEmail, emailMsg, student.userId, student.name).catch(err => console.error("Absence Parent Email fail:", err.message));
             if (student.parentPhone) sendSMS(student.parentPhone, smsMsg).catch(err => console.error("Absence SMS fail:", err.message));
         }
 
