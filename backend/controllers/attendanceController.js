@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import { sendEmail } from '../notifications/email.js';
 import { sendSMS } from '../notifications/sms.js';
 import { makeAbsenceCall } from '../notifications/voice.js';
+import NotificationLog from '../models/NotificationLog.js';
 
 // @desc    Mark attendance (Called by Python AI Engine)
 // @route   POST /api/attendance/mark
@@ -269,6 +270,18 @@ export const getAttendanceSheet = async (req, res) => {
             daysInMonth,
             data: sheetData
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get notification logs for debugging
+// @route   GET /api/attendance/logs
+// @access  Public (Should be protected in production)
+export const getNotificationLogs = async (req, res) => {
+    try {
+        const logs = await NotificationLog.find({}).sort({ createdAt: -1 }).limit(50);
+        res.json(logs);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

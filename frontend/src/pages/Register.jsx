@@ -120,9 +120,9 @@ const Register = () => {
             setLoading(false);
         } catch (error) {
             console.error("Upload Error:", error);
-            setStatus({ 
-                type: 'error', 
-                message: error.response?.data?.message || 'Failed to upload images. Check server logs.' 
+            setStatus({
+                type: 'error',
+                message: error.response?.data?.message || 'Failed to upload images. Check server logs.'
             });
         } finally {
             setIsUploading(false);
@@ -168,7 +168,7 @@ const Register = () => {
                         <div className="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-2">
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Full Name</label>
-                                <input type="text" name="name" required value={formData.name} onChange={handleChange} className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-gray-800 font-medium" placeholder="Pravin Kumar" />
+                                <input type="text" name="name" required value={formData.name} onChange={handleChange} className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-gray-800 font-medium" placeholder="Name" />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Student ID</label>

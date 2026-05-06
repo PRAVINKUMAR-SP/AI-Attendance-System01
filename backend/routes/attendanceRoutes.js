@@ -1,10 +1,11 @@
 import express from 'express';
-import { markAttendance, getAttendance, deleteAttendance, addManualAttendance, processDailyAbsences, getAttendanceSheet } from '../controllers/attendanceController.js';
+import { markAttendance, getAttendance, deleteAttendance, addManualAttendance, processDailyAbsences, getAttendanceSheet, getNotificationLogs } from '../controllers/attendanceController.js';
 
 const router = express.Router();
 
 router.route('/').get(getAttendance);
 router.route('/sheet').get(getAttendanceSheet);
+router.route('/logs').get(getNotificationLogs); // New route for debugging
 router.route('/mark').post(markAttendance);
 router.route('/manual').post(addManualAttendance);
 router.route('/process-absences').post(processDailyAbsences);
