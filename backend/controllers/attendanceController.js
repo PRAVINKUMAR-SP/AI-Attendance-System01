@@ -130,8 +130,9 @@ export const addManualAttendance = async (req, res) => {
 // @access  Public
 export const processDailyAbsences = async (req, res) => {
     try {
-        // CLEAN: Trim and normalize date strings to prevent hidden character mismatches
-        const searchDate = date.toString().trim();
+        const { date } = req.body;
+        const searchDate = (date || '').toString().trim();
+        console.log(`[ABSENCE CHECK] Received date from frontend: "${searchDate}"`);
 
         // 1. Get all registered users
         const allUsers = await User.find({});
@@ -185,12 +186,6 @@ export const processDailyAbsences = async (req, res) => {
             if (student.email) sendEmail(student.email, emailMsg).catch(err => console.error("Absence Email fail:", err.message));
             if (student.parentEmail) sendEmail(student.parentEmail, emailMsg).catch(err => console.error("Absence Parent Email fail:", err.message));
             if (student.parentPhone) sendSMS(student.parentPhone, smsMsg).catch(err => console.error("Absence SMS fail:", err.message));
-        }
-
-            // Voice Call Parent
-            if (student.parentPhone) {
-                await makeAbsenceCall(student.parentPhone, student.name);
-            }
         }
 
         res.status(200).json({
