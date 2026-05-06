@@ -33,36 +33,22 @@ export const markAttendance = async (req, res) => {
             status: 'Present'
         });
 
-        // Trigger Email and SMS Notification
-        const emailMsg = `Hello ${user.name},\n\nYour attendance has been recorded for today.\n\nDate: ${date}\nTime: ${time}`;
-        const smsMsg = `Hello ${user.name}, your attendance was marked at ${time} on ${date}.`;
+        // Trigger Notifications in Background (Non-blocking)
+        const emailMsg = `Hello ${user.name},\n\nYour attendance has been recorded for today.\n\nDate: ${normalizedDate}\nTime: ${time}`;
+        const smsMsg = `Hello ${user.name}, your attendance was marked at ${time} on ${normalizedDate}.`;
         const parentSmsMsg = `Notification: Your ward ${user.name} has arrived at college. Time: ${time}.`;
 
-        if (user.email) {
-            console.log(`[NOTIFY] Sending Email to ${user.email}...`);
-            await sendEmail(user.email, emailMsg);
-        }
-
+        // We don't 'await' these so the response returns to user immediately
+        if (user.email) sendEmail(user.email, emailMsg).catch(err => console.error("Email fail:", err.message));
         if (user.parentEmail) {
-            console.log(`[NOTIFY] Sending Parent Email to ${user.parentEmail}...`);
-            const parentEmailMsg = `Notification: Your ward ${user.name} has arrived at college.\n\nTime: ${time}`;
-            await sendEmail(user.parentEmail, parentEmailMsg);
+            const pMsg = `Notification: Your ward ${user.name} has arrived at college.\n\nTime: ${time}`;
+            sendEmail(user.parentEmail, pMsg).catch(err => console.error("Parent Email fail:", err.message));
         }
 
-        if (user.phone && user.parentPhone && user.phone === user.parentPhone) {
-            // Combined message for shared numbers
-            const combinedMsg = `${smsMsg} [Parent Alert: Your ward has arrived.]`;
-            console.log(`[NOTIFY] Sending Combined SMS to ${user.phone}...`);
-            await sendSMS(user.phone, combinedMsg);
-        } else {
-            // Separate messages
-            if (user.phone) {
-                console.log(`[NOTIFY] Sending Student SMS to ${user.phone}...`);
-                await sendSMS(user.phone, smsMsg);
-            }
-            if (user.parentPhone) {
-                console.log(`[NOTIFY] Sending Parent SMS to ${user.parentPhone}...`);
-                await sendSMS(user.parentPhone, parentSmsMsg);
+        if (user.phone) {
+            sendSMS(user.phone, smsMsg).catch(err => console.error("SMS fail:", err.message));
+            if (user.parentPhone && user.parentPhone !== user.phone) {
+                sendSMS(user.parentPhone, parentSmsMsg).catch(err => console.error("Parent SMS fail:", err.message));
             }
         }
 
@@ -151,53 +137,55 @@ export const processDailyAbsences = async (req, res) => {
         const allUsers = await User.find({});
         console.log(`[ABSENCE CHECK] Total registered users: ${allUsers.length}`);
 
-        // 2. Get ALL records for today and filter manually for 100% accuracy
+        // 2. Get ALL records and filter with a Multi-Layer Matcher
         const todayRecords = await Attendance.find({});
         const presentRecords = todayRecords.filter(rec => {
+            if (rec.status !== 'Present' && !rec.status.includes('Present')) return false;
+            
             const dbDate = rec.date ? rec.date.toString().trim() : '';
-            return dbDate === searchDate && rec.status === 'Present';
+            // Try exact match first
+            if (dbDate === searchDate) return true;
+            
+            // Try fuzzy date match as fallback
+            try {
+                const recISO = new Date(dbDate).toISOString().split('T')[0];
+                return recISO === searchDate;
+            } catch (e) {
+                return false;
+            }
         });
         
         const presentUserIds = [...new Set(presentRecords.map(rec => rec.userId))];
-        console.log(`[ABSENCE CHECK] Date Search: ${date}, Found Unique Present: ${presentUserIds.length}`);
+        console.log(`[ABSENCE CHECK] Date Search: ${searchDate}, Found Unique Present: ${presentUserIds.length}`);
 
         // 3. Find missing students
         const absentStudents = allUsers.filter(user => !presentUserIds.includes(user.userId));
         console.log(`[ABSENCE CHECK] Identified ${absentStudents.length} absent students.`);
 
-        // 4. Trigger Alerts
+        // 4. Trigger Alerts (Non-blocking)
         const timeNow = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
         for (const student of absentStudents) {
-            // Check if record already exists (to avoid index errors)
-            const exists = await Attendance.findOne({ userId: student.userId, date });
+            // Check if record already exists
+            const exists = await Attendance.findOne({ userId: student.userId, date: searchDate });
             if (!exists) {
                 await Attendance.create({
                     userId: student.userId,
                     name: student.name,
-                    date: date,
+                    date: searchDate,
                     time: timeNow,
                     status: 'Absent'
                 });
             }
 
-            const emailMsg = `URGENT: ${student.name} is ABSENT today (${date}).\n\nPlease check with your ward.`;
-            const smsMsg = `ALERT: Your ward ${student.name} is ABSENT today, ${date}. - AI System`;
+            const emailMsg = `URGENT: ${student.name} is ABSENT today (${searchDate}).\n\nPlease check with your ward.`;
+            const smsMsg = `ALERT: Your ward ${student.name} is ABSENT today, ${searchDate}. - AI System`;
 
-            // Email Parent
-            if (student.email) {
-                await sendEmail(student.email, emailMsg);
-            }
-
-            if (student.parentEmail) {
-                const parentAbsenceMsg = `URGENT: Your ward ${student.name} is ABSENT today.`;
-                await sendEmail(student.parentEmail, parentAbsenceMsg);
-            }
-
-            // SMS Parent
-            if (student.parentPhone) {
-                await sendSMS(student.parentPhone, smsMsg);
-            }
+            // Background Notifications
+            if (student.email) sendEmail(student.email, emailMsg).catch(err => console.error("Absence Email fail:", err.message));
+            if (student.parentEmail) sendEmail(student.parentEmail, emailMsg).catch(err => console.error("Absence Parent Email fail:", err.message));
+            if (student.parentPhone) sendSMS(student.parentPhone, smsMsg).catch(err => console.error("Absence SMS fail:", err.message));
+        }
 
             // Voice Call Parent
             if (student.parentPhone) {
