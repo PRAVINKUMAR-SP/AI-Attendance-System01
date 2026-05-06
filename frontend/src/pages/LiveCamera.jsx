@@ -32,13 +32,13 @@ const LiveCamera = () => {
     useEffect(() => {
         const loadModels = async () => {
             try {
-                if (!faceapi) {
-                    console.error("face-api.js library not found on window object.");
-                    setCameraError('AI Library failed to load. Please refresh.');
+                if (!faceapi || !faceapi.nets) {
+                    console.error("face-api.js library or nets property not found.");
+                    setCameraError('AI Library corrupted. Please refresh.');
                     return;
                 }
                 setStatusMessage('Loading AI Vision Models...');
-                const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
                 await Promise.all([
                     faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
