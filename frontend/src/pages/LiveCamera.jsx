@@ -253,8 +253,19 @@ const LiveCamera = () => {
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        const displaySize = { width: video.width, height: video.height };
-        faceapi.matchDimensions(canvas, displaySize);
+        const displaySize = {
+            width: videoRef.current.videoWidth || videoRef.current.offsetWidth,
+            height: videoRef.current.videoHeight || videoRef.current.offsetHeight
+        };
+
+        // SAFETY: Don't process if dimensions are 0
+        if (displaySize.width === 0 || displaySize.height === 0) {
+            console.warn("Video dimensions not ready...");
+            if (isCameraActive) requestAnimationFrame(handleVideoPlay);
+            return;
+        }
+
+        faceapi.matchDimensions(canvasRef.current, displaySize);
 
         const loop = async () => {
             if (!isCameraActive || video.paused || video.ended) return;
