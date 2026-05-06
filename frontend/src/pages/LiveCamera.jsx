@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import * as faceapi from 'face-api.js';
 
-// Get faceapi from the global window object
-// Relying on global window.faceapi
+// Get faceapi from the local bundle or global window object
 const LiveCamera = () => {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -32,28 +32,18 @@ const LiveCamera = () => {
     useEffect(() => {
         const loadModels = async () => {
             try {
-                // Wait for faceapi to be available on window (CDN load)
-                let retries = 0;
-                while ((!window.faceapi || !window.faceapi.nets) && retries < 10) {
-                    await new Promise(res => setTimeout(res, 500));
-                    retries++;
-                }
-
-                // Relying on CDN-loaded faceapi from window object
-                const faceapi = window.faceapi;
-
                 if (!faceapi || !faceapi.nets) {
-                    console.error("face-api.js library or nets property not found.");
-                    setCameraError('AI Library failed to load. Please check your internet and refresh.');
+                    console.error("face-api.js bundle not ready.");
+                    setCameraError('AI Engine internal failure. Please refresh.');
                     return;
                 }
                 setStatusMessage('Loading AI Vision Models...');
                 const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
                 await Promise.all([
-                    window.faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                    window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                    window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
                 ]);
 
                 setIsModelsLoaded(true);
@@ -147,14 +137,14 @@ const LiveCamera = () => {
                                 ? user.faceImages[i] 
                                 : `${import.meta.env.VITE_API_URL}/dataset/${user.userId}/${i + 1}.jpg`;
                             
-                            const img = await window.faceapi.fetchImage(imgUrl);
-                            const detection = await window.faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                            const img = await faceapi.fetchImage(imgUrl);
+                            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
                             if (detection) descriptions.push(detection.descriptor);
                         } catch (err) { }
                     }
                     if (descriptions.length > 0) {
                         usersMapRef.current.set(user.userId, user.name);
-                        return new window.faceapi.LabeledFaceDescriptors(user.userId, descriptions);
+                        return new faceapi.LabeledFaceDescriptors(user.userId, descriptions);
                     }
                     return null;
                 })
@@ -280,16 +270,16 @@ const LiveCamera = () => {
             return;
         }
 
-        window.faceapi.matchDimensions(canvasRef.current, displaySize);
+        faceapi.matchDimensions(canvasRef.current, displaySize);
 
         const loop = async () => {
             if (!isCameraActive || video.paused || video.ended) return;
 
-            const detections = await window.faceapi.detectAllFaces(video, new window.faceapi.SsdMobilenetv1Options())
+            const detections = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options())
                 .withFaceLandmarks()
                 .withFaceDescriptors();
 
-            const resizedDetections = window.faceapi.resizeResults(detections, displaySize);
+            const resizedDetections = faceapi.resizeResults(detections, displaySize);
             const context = canvas.getContext('2d');
             context.clearRect(0, 0, canvas.width, canvas.height);
 
