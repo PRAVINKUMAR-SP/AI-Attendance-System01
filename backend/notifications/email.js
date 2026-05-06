@@ -14,8 +14,8 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
         const resend = new Resend(apiKey);
 
         const { data, error } = await resend.emails.send({
-            from: `AI Attendance System <${fromEmail}>`,
-            to: to, // Note: For Resend free tier, this MUST match the verified email
+            from: 'AI Attendance System <onboarding@resend.dev>', // MUST use this for free accounts
+            to: to, // MUST match the email you signed up with on Resend
             subject: 'AI Attendance System Notification',
             text: `${messageContent}\n\nThank you.\nAI Attendance System`,
         });
