@@ -36,4 +36,11 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`[ENV CHECK] EMAIL_USER: ${process.env.EMAIL_USER ? 'SET ✅' : 'MISSING ❌'}`);
+    console.log(`[ENV CHECK] EMAIL_PASS: ${process.env.EMAIL_PASS ? 'SET ✅' : 'MISSING ❌'}`);
+    console.log(`[ENV CHECK] TWILIO_ACCOUNT_SID: ${process.env.TWILIO_ACCOUNT_SID ? 'SET ✅' : 'MISSING ❌'}`);
+    console.log(`[ENV CHECK] MONGO_URI: ${process.env.MONGO_URI ? 'SET ✅' : 'MISSING ❌'}`);
+    console.log(`[BUILD VERSION] v2.1 - 2026-05-06 critical fix deployed`);
+});
