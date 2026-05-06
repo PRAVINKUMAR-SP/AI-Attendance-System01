@@ -1,31 +1,40 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import NotificationLog from '../models/NotificationLog.js';
 
 export const sendEmail = async (to, messageContent, userId = 'Unknown', name = 'Unknown') => {
     try {
-        const apiKey = process.env.RESEND_API_KEY;
-        const fromEmail = process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev'; 
-
-        if (!apiKey) {
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
             console.log(`[Mock Email] To ${to}: ${messageContent}`);
             return;
         }
 
-        const resend = new Resend(apiKey);
-
-        const { data, error } = await resend.emails.send({
-            from: 'AI Attendance System <onboarding@resend.dev>', // MUST use this for free accounts
-            to: to, // MUST match the email you signed up with on Resend
-            subject: 'AI Attendance System Notification',
-            text: `${messageContent}\n\nThank you.\nAI Attendance System`,
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            family: 4, // FORCE IPv4
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+            tls: {
+                rejectUnauthorized: false
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000
         });
 
-        if (error) {
-            throw new Error(error.message || 'Failed to send email via Resend SDK');
-        }
+        const mailOptions = {
+            from: `"AI Attendance System" <${process.env.EMAIL_USER}>`,
+            to: to,
+            subject: 'AI Attendance System Notification',
+            text: `${messageContent}\n\nThank you.\nAI Attendance System`,
+        };
 
-        console.log(`[EMAIL SUCCESS] Message sent via Resend SDK: ${data.id}`);
-        
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`[EMAIL SUCCESS] Message sent: ${info.messageId}`);
+
         // Log Success to DB
         await NotificationLog.create({
             userId,
@@ -36,7 +45,7 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
         });
     } catch (error) {
         console.error(`[EMAIL ERROR] Failed to send email to ${to}:`, error.message);
-        
+
         // Log Failure to DB
         try {
             await NotificationLog.create({
