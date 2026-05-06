@@ -25,8 +25,8 @@ export const markAttendance = async (req, res) => {
         const attendance = await Attendance.create({
             userId,
             name: user.name,
-            date,
-            time,
+            date: date, // Explicitly use the date sent by the frontend
+            time: time, // Explicitly use the time sent by the frontend
             status: 'Present'
         });
 
