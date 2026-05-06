@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 
 // Get faceapi from the global window object
-const faceapi = window.faceapi;
-
 const LiveCamera = () => {
+    const faceapi = window.faceapi;
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [isModelsLoaded, setIsModelsLoaded] = useState(false);
@@ -33,6 +32,11 @@ const LiveCamera = () => {
     useEffect(() => {
         const loadModels = async () => {
             try {
+                if (!faceapi) {
+                    console.error("face-api.js library not found on window object.");
+                    setCameraError('AI Library failed to load. Please refresh.');
+                    return;
+                }
                 setStatusMessage('Loading AI Vision Models...');
                 const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
 
