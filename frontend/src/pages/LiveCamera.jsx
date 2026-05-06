@@ -30,11 +30,18 @@ const LiveCamera = () => {
 
     // 1. Load Models & Initial Setup
     useEffect(() => {
-        const loadModels = async () => {
-            try {
+                // Wait for faceapi to be available on window (CDN load)
+                let retries = 0;
+                while ((!window.faceapi || !window.faceapi.nets) && retries < 10) {
+                    await new Promise(res => setTimeout(res, 500));
+                    retries++;
+                }
+
+                const faceapi = window.faceapi;
+
                 if (!faceapi || !faceapi.nets) {
                     console.error("face-api.js library or nets property not found.");
-                    setCameraError('AI Library corrupted. Please refresh.');
+                    setCameraError('AI Library failed to load. Please check your internet and refresh.');
                     return;
                 }
                 setStatusMessage('Loading AI Vision Models...');
