@@ -198,7 +198,8 @@ const LiveCamera = () => {
         setStatusMessage('Session Expired. Processing Parent Alerts...');
         try {
             const now = new Date();
-            const date = now.toISOString().split('T')[0];
+            const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+            const date = localDate.toISOString().split('T')[0];
 
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/process-absences`, {
                 method: 'POST',
@@ -226,7 +227,8 @@ const LiveCamera = () => {
 
         try {
             const now = new Date();
-            const date = now.toISOString().split('T')[0];
+            const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+            const date = localDate.toISOString().split('T')[0];
             const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/attendance/mark`, {
