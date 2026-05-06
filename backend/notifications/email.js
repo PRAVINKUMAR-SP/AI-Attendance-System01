@@ -9,32 +9,22 @@ export const sendEmail = async (to, messageContent, userId = 'Unknown', name = '
             return;
         }
 
-        // Network Heartbeat Test
-        try {
-            await new Promise((resolve, reject) => {
-                dns.lookup('smtp.gmail.com', { family: 4 }, (err, address) => {
-                    if (err) reject(new Error(`DNS Lookup Failed: ${err.message}`));
-                    else resolve(address);
-                });
-            });
-            console.log("[HEARTBEAT] smtp.gmail.com is reachable via IPv4");
-        } catch (netErr) {
-            console.error("[HEARTBEAT ERROR]", netErr.message);
-            await NotificationLog.create({
-                userId, name, type: 'NetworkCheck', recipient: 'google.com',
-                status: 'Failed', error: netErr.message
-            });
-        }
-
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, 
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
             },
             tls: {
                 rejectUnauthorized: false
-            }
+            },
+            // THE ABSOLUTE FIX: Hard-lock to IPv4
+            family: 4, 
+            connectionTimeout: 20000,
+            greetingTimeout: 20000,
+            socketTimeout: 20000
         });
 
         const mailOptions = {
