@@ -3,9 +3,17 @@ import Attendance from '../models/Attendance.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // @desc    Register new user
 // @route   POST /api/users/register
@@ -80,27 +88,23 @@ export const uploadImages = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const datasetDir = path.join(__dirname, '..', '..', 'dataset', userId);
-        if (!fs.existsSync(datasetDir)) {
-            console.log(`[BACKEND] Creating directory: ${datasetDir}`);
-            fs.mkdirSync(datasetDir, { recursive: true });
-        }
-
-        images.forEach((image, index) => {
-            const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
-            const buffer = Buffer.from(base64Data, 'base64');
-            const filePath = path.join(datasetDir, `${index + 1}.jpg`);
-            fs.writeFileSync(filePath, buffer);
-            if (index === 0 || index === 19) {
-                console.log(`[BACKEND] Saved image to: ${filePath}`);
-            }
+        const uploadPromises = images.map((image, index) => {
+            return cloudinary.uploader.upload(image, {
+                folder: `ai_attendance/dataset/${userId}`,
+                public_id: `${index + 1}`,
+                overwrite: true
+            });
         });
 
+        const uploadResults = await Promise.all(uploadPromises);
+        const imageUrls = uploadResults.map(result => result.secure_url);
+
+        user.faceImages = imageUrls;
         user.faceDataRegistered = true;
         await user.save();
 
-        console.log(`[BACKEND] Successfully uploaded 20 images for user ${userId}`);
-        res.status(200).json({ message: 'Images uploaded successfully' });
+        console.log(`[BACKEND] Successfully uploaded 20 images to Cloudinary for user ${userId}`);
+        res.status(200).json({ message: 'Images uploaded to Cloud successfully' });
     } catch (error) {
         console.error(`[BACKEND] Upload Error: ${error.message}`);
         res.status(500).json({ message: error.message });

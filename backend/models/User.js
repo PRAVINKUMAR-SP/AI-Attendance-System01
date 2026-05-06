@@ -30,6 +30,10 @@ const userSchema = mongoose.Schema({
     faceDataRegistered: {
         type: Boolean,
         default: false,
+    },
+    faceImages: {
+        type: [String],
+        default: []
     }
 }, {
     timestamps: true,

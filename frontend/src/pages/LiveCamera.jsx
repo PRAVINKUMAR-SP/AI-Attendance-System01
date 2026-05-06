@@ -125,9 +125,13 @@ const LiveCamera = () => {
             const labeledFaceDescriptors = await Promise.all(
                 registeredUsers.map(async (user) => {
                     const descriptions = [];
-                    for (let i = 1; i <= 3; i++) {
+                    for (let i = 0; i < (user.faceImages?.length || 3); i++) {
                         try {
-                            const imgUrl = `${import.meta.env.VITE_API_URL}/dataset/${user.userId}/${i}.jpg`;
+                            // Use Cloudinary URL if available, else fallback to local dataset
+                            const imgUrl = user.faceImages && user.faceImages[i] 
+                                ? user.faceImages[i] 
+                                : `${import.meta.env.VITE_API_URL}/dataset/${user.userId}/${i + 1}.jpg`;
+                            
                             const img = await faceapi.fetchImage(imgUrl);
                             const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
                             if (detection) descriptions.push(detection.descriptor);
