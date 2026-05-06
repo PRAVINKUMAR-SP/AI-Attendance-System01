@@ -144,8 +144,8 @@ export const addManualAttendance = async (req, res) => {
 // @access  Public
 export const processDailyAbsences = async (req, res) => {
     try {
-        // Use direct string comparison to avoid timezone shifts
-        const searchDate = date; // Frontend already sends YYYY-MM-DD
+        // CLEAN: Trim and normalize date strings to prevent hidden character mismatches
+        const searchDate = date.toString().trim();
 
         // 1. Get all registered users
         const allUsers = await User.find({});
@@ -154,8 +154,8 @@ export const processDailyAbsences = async (req, res) => {
         // 2. Get ALL records for today and filter manually for 100% accuracy
         const todayRecords = await Attendance.find({});
         const presentRecords = todayRecords.filter(rec => {
-            // Direct string comparison of the date field
-            return rec.date === searchDate && rec.status === 'Present';
+            const dbDate = rec.date ? rec.date.toString().trim() : '';
+            return dbDate === searchDate && rec.status === 'Present';
         });
         
         const presentUserIds = [...new Set(presentRecords.map(rec => rec.userId))];
