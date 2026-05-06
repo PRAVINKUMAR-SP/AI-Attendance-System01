@@ -119,7 +119,11 @@ const Register = () => {
             setFormData({ name: '', userId: '', email: '', parentEmail: '', phone: '', parentPhone: '' });
             setLoading(false);
         } catch (error) {
-            setStatus({ type: 'error', message: 'Failed to upload images to backend.' });
+            console.error("Upload Error:", error);
+            setStatus({ 
+                type: 'error', 
+                message: error.response?.data?.message || 'Failed to upload images. Check server logs.' 
+            });
         } finally {
             setIsUploading(false);
         }
