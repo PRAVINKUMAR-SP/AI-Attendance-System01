@@ -178,27 +178,28 @@ export const processDailyAbsences = async (req, res) => {
 
             // Email Parent
             if (student.email) {
-                sendEmail(student.email, emailMsg);
+                await sendEmail(student.email, emailMsg);
             }
 
             if (student.parentEmail) {
                 const parentAbsenceMsg = `URGENT: Your ward ${student.name} is ABSENT today.`;
-                sendEmail(student.parentEmail, parentAbsenceMsg);
+                await sendEmail(student.parentEmail, parentAbsenceMsg);
             }
 
             // SMS Parent
             if (student.parentPhone) {
-                sendSMS(student.parentPhone, smsMsg);
+                await sendSMS(student.parentPhone, smsMsg);
             }
 
             // Voice Call Parent
             if (student.parentPhone) {
-                makeAbsenceCall(student.parentPhone, student.name);
+                await makeAbsenceCall(student.parentPhone, student.name);
             }
         }
 
         res.status(200).json({
             message: `Absence processing complete. Alerts sent to ${absentStudents.length} parents.`,
+            presentCount: presentUserIds.length,
             absentCount: absentStudents.length,
             absentStudents: absentStudents.map(s => ({
                 name: s.name,
